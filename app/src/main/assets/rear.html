@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>길동무 빙고 · 뒷좌석</title>
+<style>
+:root{--bg:#FFF8EF;--ink:#1F2433;--sub:#7A7F8C;--coral:#FF6B57;--dot:#ECE4D8}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+body{display:flex;flex-direction:column;padding:16px;gap:12px;min-height:100%}
+header{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header canvas{width:44px;height:44px;image-rendering:pixelated}
+.titles{flex:1;min-width:0}
+h1{font-size:28px;font-weight:800}
+.route{color:var(--sub);font-size:15px;margin-top:2px}
+.score{background:var(--coral);color:#fff;font-weight:800;font-size:18px;padding:10px 18px;border-radius:999px;white-space:nowrap}
+.talk{display:flex;align-items:flex-end;gap:10px}
+.talk canvas{width:64px;height:96px;image-rendering:pixelated;flex:none}
+.talk .lv{display:block;font-size:12px;font-weight:800;color:var(--coral);margin-bottom:2px}
+.say{flex:1;background:#fff;border-radius:18px;padding:12px 16px;font-size:18px;font-weight:700;box-shadow:0 2px 8px rgba(31,36,51,.08);min-height:48px}
+.board{flex:1;display:grid;gap:10px;min-height:0}
+.cell{background:#fff;border-radius:20px;border:3px solid var(--soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:8px;text-align:center;position:relative;box-shadow:0 3px 10px rgba(31,36,51,.07);transition:transform .2s}
+.cell canvas{width:56px;height:56px;image-rendering:pixelated;border-radius:50%;background:var(--soft);padding:6px}
+.cell b{font-size:16px;line-height:1.2;word-break:keep-all}
+.cell small{font-size:12px;color:var(--sub);word-break:keep-all}
+.cell.on{background:var(--tone);border-color:var(--tone);color:#fff}
+.cell.on small{color:rgba(255,255,255,.9)}
+.cell.on canvas{background:rgba(255,255,255,.25)}
+.cell.on::after{content:"✓";position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:#fff;color:var(--tone);font-weight:900;display:flex;align-items:center;justify-content:center}
+.cell.tap:not(.on){cursor:pointer;border-style:dashed}
+.cell.pop{animation:pop .6s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-3deg)}100%{transform:scale(1)}}
+.empty{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--sub);font-size:22px;line-height:1.6}
+.dexbtn{background:#1DB271;color:#fff;font-weight:800;font-size:16px;padding:10px 16px;border-radius:999px;border:0}
+.dex{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;gap:12px;overflow:auto}
+.dex.show{display:flex}
+.dex header h2{flex:1;font-size:24px}
+.dex .close{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-weight:800;font-size:16px}
+.stamps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.stamp{background:#fff;border-radius:20px;padding:16px 10px;text-align:center;box-shadow:0 2px 8px rgba(31,36,51,.08)}
+.stamp .ring{width:96px;height:96px;margin:0 auto 8px;border-radius:50%;border:5px solid #E5484D;background:#FFF0EE;display:flex;align-items:center;justify-content:center;transform:rotate(-8deg)}
+.stamp .ring canvas{width:56px;height:56px;image-rendering:pixelated}
+.stamp b{display:block;font-size:16px;word-break:keep-all}
+.stamp small{color:var(--sub);font-size:12px}
+.stamp .foods canvas{width:28px;height:28px;image-rendering:pixelated;margin:6px 2px 0}
+.stamp.empty{background:rgba(255,255,255,.5);box-shadow:none;border:2px dashed var(--dot)}
+.stamp.empty .ring{border:4px dashed var(--dot);background:none;color:var(--dot);font-size:40px;font-weight:900}
+.dex .none{color:var(--sub);font-size:18px;text-align:center;margin-top:40px}
+.result{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;gap:12px;overflow:auto;z-index:5}
+.result.show{display:flex}
+.result h2{font-size:40px;color:var(--coral)}
+.result .sub{color:var(--sub);font-size:15px;margin-top:-6px}
+.result .chips{display:flex;gap:8px;flex-wrap:wrap}
+.result .chips span{color:#fff;font-weight:800;font-size:15px;padding:7px 14px;border-radius:999px}
+.result .mini{display:grid;gap:6px;max-width:360px}
+.result .mini div{aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.result .mini canvas{width:60%;height:60%;image-rendering:pixelated}
+.note{background:#fff;border:2px solid #F1E3CF;border-radius:20px;padding:18px 20px}
+.note h3{font-size:22px}.note .date{color:var(--sub);font-size:13px;margin-bottom:6px}
+.note p{font-size:17px;line-height:1.5;padding:8px 2px;border-bottom:2px solid #F1E3CF}
+.result .close{align-self:flex-end;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:10px 20px;font-weight:800;font-size:16px}
+.study{display:none;gap:12px;align-items:stretch;background:#fff;border-radius:18px;padding:10px;box-shadow:0 2px 8px rgba(31,36,51,.08);border-left:8px solid var(--st)}
+.study.show{display:flex}
+.study img{width:110px;height:110px;object-fit:cover;border-radius:12px;flex:none}
+.study .ico{width:110px;height:110px;border-radius:12px;background:var(--st);display:flex;align-items:center;justify-content:center;flex:none}
+.study .ico canvas{width:64px;height:64px;image-rendering:pixelated}
+.study .t{flex:1;min-width:0}
+.study .chip{display:inline-block;color:#fff;background:var(--st);font-weight:800;font-size:13px;padding:3px 10px;border-radius:999px}
+.study b{display:block;font-size:20px;margin:4px 0 2px}
+.study small{color:var(--sub);font-size:12px}
+.study p{font-size:15px;line-height:1.45;margin-top:4px}
+.asks{display:flex;gap:8px}
+.asks button{flex:1;border:0;border-radius:14px;padding:10px 6px;font-size:16px;font-weight:800;color:#fff}
+.asks button:active{transform:scale(.96)}
+.quiz{margin-top:8px;border-top:2px dashed #ECE4D8;padding-top:8px}
+.quiz .qq{font-size:16px;font-weight:800}
+.quiz .qo{display:flex;gap:8px;margin-top:6px}
+.quiz .qo button{flex:1;border:3px solid var(--st);background:#fff;color:var(--ink);border-radius:12px;padding:10px 8px;font-size:15px;font-weight:800;word-break:keep-all}
+.quiz .qo button.right{background:#1DB271;border-color:#1DB271;color:#fff}
+.quiz .qo button.wrong{background:#ECE4D8;border-color:#ECE4D8;color:var(--sub);text-decoration:line-through}
+.quiz .qr{font-size:14px;font-weight:800;margin-top:6px}
+.book{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;padding:16px;gap:12px;overflow:auto;z-index:4}
+.book.show{display:flex}
+.book header h2{flex:1;font-size:24px}
+.book .close{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:10px 18px;font-weight:800;font-size:16px}
+.book .note .meta{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 6px}
+.book .note .meta span{font-size:12px;font-weight:800;color:#fff;padding:3px 10px;border-radius:999px}
+.book .none{color:var(--sub);font-size:18px;text-align:center;margin-top:40px}
+.bookbtn{background:#7B61FF;color:#fff;font-weight:800;font-size:16px;padding:10px 16px;border-radius:999px;border:0}
+.rest{position:fixed;inset:0;background:#DFF5EA;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;z-index:9;padding:24px}
+.rest.show{display:flex}
+.rest b{font-size:34px;color:#11734A}
+.rest p{font-size:20px;color:#2E5E48;line-height:1.5}
+.rest .clock{font-size:56px;font-weight:900;color:#1DB271}
+.rest button{background:#1DB271;color:#fff;border:0;border-radius:999px;padding:12px 24px;font-size:18px;font-weight:800}
+.bingo{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(255,248,239,.85);font-size:96px;font-weight:900;color:var(--coral);letter-spacing:4px}
+.bingo.show{display:flex;animation:fade 1.8s ease forwards}
+@keyframes fade{0%{opacity:0;transform:scale(.6)}20%{opacity:1;transform:scale(1.05)}80%{opacity:1}100%{opacity:0}}
+@media (max-width:600px){.cell canvas{width:40px;height:40px;padding:4px}.cell b{font-size:13px}.cell small{display:none}h1{font-size:22px}}
+</style>
+</head>
+<body>
+<header>
+  <canvas id="logo" width="12" height="12"></canvas>
+  <div class="titles"><h1>길동무 빙고</h1><div class="route" id="route">차와 연결하는 중…</div></div>
+  <div class="score" id="score" hidden></div>
+  <button class="bookbtn" id="bookbtn">일기장</button>
+  <button class="dexbtn" id="dexbtn">휴게소 도감</button>
+</header>
+<div class="talk"><canvas id="friend" hidden></canvas><div class="say"><span class="lv" id="lv"></span><span id="say">달리는 동안 차가 칸을 채워 줘요. 점선 칸은 직접 눌러요!</span></div></div>
+<div class="asks">
+  <button style="background:#3D7BFF" data-k="toilet">화장실 가고 싶어</button>
+  <button style="background:#FF9A1F" data-k="hungry">배고파</button>
+  <button style="background:#1DB271" data-k="sick">속이 안 좋아</button>
+</div>
+<div class="study" id="study"><img id="simg" alt=""><div class="ico" id="sico"><canvas></canvas></div><div class="t"><span class="chip" id="schip"></span><b id="stitle"></b><small id="saddr"></small><p id="stext"></p><div class="quiz" id="quiz" hidden><div class="qq" id="qq"></div><div class="qo" id="qo"></div><div class="qr" id="qr"></div></div></div></div>
+<div class="board" id="board"></div>
+<div class="empty" id="empty">아빠 차 내비에 목적지를 넣으면<br>빙고판이 나타나요</div>
+<div class="bingo" id="bingo">빙고!</div>
+<div class="result" id="result">
+  <h2>도착!</h2><div class="sub" id="rsub"></div>
+  <div class="chips" id="rchips"></div>
+  <div class="mini" id="rmini"></div>
+  <div class="note"><h3>오늘의 일기</h3><div class="date" id="rdate"></div><div id="rlines"></div></div>
+  <button class="close" id="rclose">닫기</button>
+</div>
+<div class="credit" style="font-size:11px;color:var(--sub);text-align:center">관광정보: 한국관광공사 · 터널 지도: © OpenStreetMap contributors</div>
+<div class="book" id="book">
+  <header><h2 id="booktitle">일기장</h2><button class="close" id="bookclose">닫기</button></header>
+  <div id="notes"></div>
+</div>
+<div class="rest" id="rest">
+  <b>잠깐 화면 쉬기</b>
+  <p>창밖 멀리 있는 산이나 하늘을 봐요.<br>크게 숨을 쉬면 속이 편해져요.</p>
+  <div class="clock" id="restclock"></div>
+  <button id="restok">이제 괜찮아요</button>
+</div>
+<div class="dex" id="dex">
+  <header><h2 id="dextitle">휴게소 도감</h2><button class="close" id="dexclose">닫기</button></header>
+  <div class="stamps" id="stamps"></div>
+</div>
+<script>
+let palette = {}, prev = null;
+function draw(canvas, rows, accent) {
+  canvas.width = rows[0].length; canvas.height = rows.length;
+  const g = canvas.getContext("2d");
+  g.clearRect(0, 0, canvas.width, canvas.height);
+  rows.forEach((row, y) => [...row].forEach((ch, x) => {
+    if (ch === ".") return;
+    g.fillStyle = ch === "A" ? accent : ch === "V" ? "#002C5F" : (palette[ch] || "#000");
+    g.fillRect(x, y, 1, 1);
+  }));
+}
+function render(s) {
+  palette = s.palette || palette;
+  if (s.dex) renderDex(s);
+  renderStudy(s.study);
+  renderBook(s.diaries || []);
+  renderRest(s.screenRest || 0);
+  if (s.cells) renderResult(s);
+  const board = document.getElementById("board");
+  const empty = document.getElementById("empty");
+  if (s.logo) draw(document.getElementById("logo"), s.logo, "#FF6B57");
+  const fc = document.getElementById("friend");
+  fc.hidden = !s.friend;
+  if (s.friend) draw(fc, s.friend.rows, s.friend.color);
+  const lv = document.getElementById("lv");
+  lv.textContent = s.friend ? `${s.friend.level} ${s.friend.name}` + (s.friend.toNext >= 0 ? ` · 다음 단계까지 ${s.friend.toNext}걸음` : "") : "";
+  if (s.last && !s.cells) document.getElementById("say").textContent = s.last;
+  if (!s.cells) { board.style.display = "none"; empty.style.display = "flex"; return; }
+  board.style.display = "grid"; empty.style.display = "none";
+  document.getElementById("route").textContent = `${s.route}까지 ${s.km}km · 지나온 길 ${s.passedKm}km`;
+  const score = document.getElementById("score");
+  score.hidden = false; score.textContent = `${s.checked}/${s.total}칸 · 빙고 ${s.lines}줄`;
+  if (s.last) document.getElementById("say").textContent = s.last;
+  board.style.gridTemplateColumns = `repeat(${s.size},1fr)`;
+  board.style.gridTemplateRows = `repeat(${s.size},1fr)`;
+  if (board.children.length !== s.cells.length) {
+    board.innerHTML = "";
+    s.cells.forEach((c, i) => {
+      const d = document.createElement("div");
+      d.className = "cell";
+      d.innerHTML = `<canvas width="12" height="12"></canvas><b></b><small></small>`;
+      d.onclick = () => { if (d.classList.contains("tap") && !d.classList.contains("on")) fetch(`/tap?i=${i}`).then(poll); };
+      board.appendChild(d);
+    });
+  }
+  s.cells.forEach((c, i) => {
+    const d = board.children[i];
+    d.style.setProperty("--tone", c.color); d.style.setProperty("--soft", c.soft);
+    d.querySelector("b").textContent = c.title;
+    d.querySelector("small").textContent = c.checked ? "채웠어요!" : c.hint;
+    d.classList.toggle("tap", c.tap);
+    const was = prev && prev.cells && prev.cells[i] && prev.cells[i].checked;
+    if (c.checked && prev && !was) { d.classList.remove("pop"); void d.offsetWidth; d.classList.add("pop"); }
+    d.classList.toggle("on", c.checked);
+    draw(d.querySelector("canvas"), c.sprite, c.checked ? c.soft : c.color);
+  });
+  if (prev && prev.lines !== undefined && s.lines > prev.lines) {
+    const b = document.getElementById("bingo");
+    b.textContent = s.lines === 1 ? "빙고!" : `빙고 ${s.lines}줄!`;
+    b.classList.remove("show"); void b.offsetWidth; b.classList.add("show");
+  }
+  prev = s;
+}
+let dexKey = "";
+function renderDex(s) {
+  const list = (s.dex || []).slice().sort((a, b) => b.lastAt - a.lastAt);
+  document.getElementById("dextitle").textContent = `휴게소 도감 · ${list.length}곳`;
+  const key = JSON.stringify(list);
+  if (key === dexKey) return;
+  dexKey = key;
+  const box = document.getElementById("stamps");
+  box.innerHTML = "";
+  list.forEach(st => {
+    const d = document.createElement("div");
+    d.className = "stamp";
+    d.innerHTML = `<div class="ring"><canvas></canvas></div><b></b><small></small><div class="foods"></div>`;
+    draw(d.querySelector(".ring canvas"), s.dexSprites.rest, "#E5484D");
+    d.querySelector("b").textContent = st.name;
+    d.querySelector("small").textContent = (st.visits > 1 ? `${st.visits}번 방문 · ` : "") + `처음 ${st.first}`;
+    st.foods.forEach(f => { const c = document.createElement("canvas"); draw(c, s.dexSprites[f], "#F0508C"); d.querySelector(".foods").appendChild(c); });
+    box.appendChild(d);
+  });
+  for (let i = list.length; i < Math.max(8, (Math.floor(list.length / 4) + 1) * 4); i++) {
+    const e = document.createElement("div");
+    e.className = "stamp empty";
+    e.innerHTML = `<div class="ring">?</div><small>다음 휴게소</small>`;
+    box.appendChild(e);
+  }
+}
+const dexEl = document.getElementById("dex");
+document.getElementById("dexbtn").onclick = () => dexEl.classList.add("show");
+document.getElementById("dexclose").onclick = () => dexEl.classList.remove("show");
+let resultKey = "", resultClosed = "";
+function renderResult(s) {
+  const el = document.getElementById("result");
+  if (!s.result) { el.classList.remove("show"); resultKey = ""; return; }
+  const r = s.result, key = JSON.stringify(r);
+  if (key !== resultKey) {
+    resultKey = key;
+    document.getElementById("rsub").textContent = `${r.dest} 가는 길 · ${r.friend}랑 함께`;
+    const time = r.minutes >= 60 ? `${Math.floor(r.minutes / 60)}시간 ${r.minutes % 60}분` : `${r.minutes}분`;
+    document.getElementById("rchips").innerHTML = [[`빙고 ${r.bingo}줄`, "#FF6B57"], [`${r.checked}/${r.total}칸`, "#3D7BFF"], [`${r.km}km`, "#1DB271"], [time, "#7B61FF"]].concat(r.quiz > 0 ? [[`퀴즈 ${r.quizRight}/${r.quiz}`, "#FF9A1F"]] : [])
+      .map(([t, c]) => `<span style="background:${c}">${t}</span>`).join("");
+    const mini = document.getElementById("rmini");
+    mini.style.gridTemplateColumns = `repeat(${s.size},1fr)`;
+    mini.innerHTML = "";
+    s.cells.forEach(c => {
+      const d = document.createElement("div");
+      d.style.background = c.checked ? c.color : "#fff";
+      d.style.border = c.checked ? "0" : "2px solid #ECE4D8";
+      d.style.opacity = c.checked ? 1 : .6;
+      const cv = document.createElement("canvas"); draw(cv, c.sprite, c.checked ? c.soft : "#ECE4D8"); d.appendChild(cv);
+      mini.appendChild(d);
+    });
+    document.getElementById("rdate").textContent = r.date + (r.ai ? ` · AI가 쓴 일기 (${r.ai})` : "");
+    document.getElementById("rlines").innerHTML = "";
+    r.lines.forEach(l => { const p = document.createElement("p"); p.textContent = l; document.getElementById("rlines").appendChild(p); });
+  }
+  el.classList.toggle("show", resultClosed !== key);
+}
+document.getElementById("rclose").onclick = () => { resultClosed = resultKey; document.getElementById("result").classList.remove("show"); };
+function renderStudy(c) {
+  const el = document.getElementById("study");
+  el.classList.toggle("show", !!c);
+  if (!c) return;
+  el.style.setProperty("--st", c.color);
+  document.getElementById("schip").textContent = `${c.label} ${c.step}`;
+  document.getElementById("stitle").textContent = c.title;
+  document.getElementById("saddr").textContent = c.addr;
+  document.getElementById("stext").textContent = c.text;
+  const img = document.getElementById("simg"), ico = document.getElementById("sico");
+  img.style.display = c.image ? "block" : "none";
+  ico.style.display = c.image ? "none" : "flex";
+  if (c.image && img.getAttribute("src") !== c.image) img.src = c.image;
+  if (!c.image) draw(ico.querySelector("canvas"), c.sprite, "#fff");
+  renderQuiz(c.quiz);
+}
+let quizKey = "";
+function renderQuiz(q) {
+  const el = document.getElementById("quiz");
+  el.hidden = !q;
+  if (!q) { quizKey = ""; return; }
+  const key = JSON.stringify(q);
+  if (key === quizKey) return;
+  quizKey = key;
+  document.getElementById("qq").textContent = "퀴즈! " + q.q;
+  const box = document.getElementById("qo");
+  box.innerHTML = "";
+  q.o.forEach((o, i) => {
+    const b = document.createElement("button");
+    b.textContent = o;
+    if (q.chosen >= 0) {
+      if (i === q.a) b.className = "right";
+      else if (i === q.chosen) b.className = "wrong";
+    } else b.onclick = () => fetch(`/quiz?a=${i}`).then(poll);
+    box.appendChild(b);
+  });
+  document.getElementById("qr").textContent = q.chosen < 0 ? "" : q.chosen === q.a ? "딩동댕! 맞았어요." : "아깝다! 초록색이 정답이에요.";
+}
+let bookKey = "";
+function renderBook(list) {
+  document.getElementById("booktitle").textContent = `일기장 · ${list.length}편`;
+  const key = JSON.stringify(list);
+  if (key === bookKey) return;
+  bookKey = key;
+  const box = document.getElementById("notes");
+  box.innerHTML = list.length ? "" : `<div class="none">도착하면 친구가 일기를 써 줘요.<br>첫 일기를 기다리는 중!</div>`;
+  list.forEach(r => {
+    const n = document.createElement("div");
+    n.className = "note"; n.style.marginBottom = "12px";
+    const h = document.createElement("h3"); h.textContent = `${r.dest} 가는 길`; n.appendChild(h);
+    const d = document.createElement("div"); d.className = "date"; d.textContent = `${r.date} · ${r.friend}랑` + (r.ai ? ` · AI가 쓴 일기 (${r.ai})` : ""); n.appendChild(d);
+    const m = document.createElement("div"); m.className = "meta";
+    m.innerHTML = [[`빙고 ${r.bingo}줄`, "#FF6B57"], [`${r.checked}/${r.total}칸`, "#3D7BFF"], [`${r.km}km`, "#1DB271"]]
+      .concat(r.quiz > 0 ? [[`퀴즈 ${r.quizRight}/${r.quiz}`, "#FF9A1F"]] : [])
+      .map(([t, c]) => `<span style="background:${c}">${t}</span>`).join("");
+    n.appendChild(m);
+    (r.lines || []).forEach(l => { const p = document.createElement("p"); p.textContent = l; n.appendChild(p); });
+    box.appendChild(n);
+  });
+}
+const bookEl = document.getElementById("book");
+document.getElementById("bookbtn").onclick = () => bookEl.classList.add("show");
+document.getElementById("bookclose").onclick = () => bookEl.classList.remove("show");
+let restEnd = 0, restSeen = 0;
+function renderRest(sec) {
+  // 같은 값이 다시 오면(차가 상태를 아직 안 바꿈) 새로 시작하지 않는다
+  if (sec > 0 && sec !== restSeen) restEnd = Date.now() + sec * 1000;
+  restSeen = sec;
+  const left = Math.max(0, Math.round((restEnd - Date.now()) / 1000));
+  document.getElementById("rest").classList.toggle("show", left > 0);
+  document.getElementById("restclock").textContent = `${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`;
+}
+document.getElementById("restok").onclick = () => { restEnd = 0; renderRest(0); };
+document.querySelectorAll(".asks button").forEach(b => b.onclick = () => fetch(`/ask?k=${b.dataset.k}`).then(poll));
+function poll() { fetch("/state").then(r => r.json()).then(render).catch(() => {}); }
+poll(); setInterval(poll, 1000);
+</script>
+</body>
+</html>

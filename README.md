@@ -2,12 +2,12 @@
 
 차가 스스로 칸을 채우는 가족 이동 빙고. 이번 길의 톨게이트·휴게소·터널로 빙고판을 만들고, 아이가 고른 도트 친구가 뒷좌석 태블릿에서 가는 길 이야기와 퀴즈를 들려주며 함께 자랍니다.
 
-현대자동차그룹 차량용 앱 개발 공모전 출품작 (Pleos Connect 앱).
+현대자동차그룹 차량용 앱 개발 공모전 출품작 (Pleos Connect 앱) · 팀 길동무친구들.
 
 ## APK
 
-- `apk/김주원_길동무빙고_release.apk` (release 빌드, 관광정보 인증키 미포함)
-- 설치: `adb install -r -g apk/김주원_길동무빙고_release.apk`
+- `apk/길동무친구들_길동무빙고_release.apk` (release 빌드, 관광정보 인증키 미포함)
+- 설치: `adb install -r -g apk/길동무친구들_길동무빙고_release.apk`
 
 ## 시연 영상
 
@@ -27,7 +27,7 @@
 ## 실행 방법
 
 1. 에뮬레이터 실행: `emulator -avd pleos_connect_21 -gpu host -no-snapshot -port 5580`
-2. APK 설치(권한 자동 허용 `-g`): `adb -s emulator-5580 install -r -g apk/김주원_길동무빙고_release.apk`
+2. APK 설치(권한 자동 허용 `-g`): `adb -s emulator-5580 install -r -g apk/길동무친구들_길동무빙고_release.apk`
 3. 앱 실행 → 친구(강아지·고양이·아기 공룡)와 색 고르기
 4. 내비에 목적지를 넣으면 빙고판이 만들어집니다. 에뮬레이터에서는 차가 경로 위를 움직이지 않으므로 시험 주행(안내 목록을 차례로 지난 것처럼 넣기, 화면에 "시뮬레이션 입력" 표시)으로 진행합니다.
    - 한 번에 보기: `bash demo.sh` (서울→전주 시나리오)
